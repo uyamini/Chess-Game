@@ -33,6 +33,9 @@ function createBoard() {
         const square = document.createElement('div');
         square.classList.add('square');
         square.innerHTML = startPiece;
+        //make it drag and drop
+        if(square.firstChild)
+            square.firstChild.setAttribute('draggable',true);
         
         square.setAttribute('square-id', i);
         //square.classList.add('beige');
