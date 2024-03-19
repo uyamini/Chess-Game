@@ -67,6 +67,16 @@ squares.forEach(square => {
     square.addEventListener('drop', dragDrop);
 })
 
+let startPositionId;
+let draggedElement;
+
+function dragStart(e) {
+    startPositionId = e.target.parentNode.getAttribute('square-id');
+    draggedElement = e.target
+}
+
+
+
 /*----- functions -----*/
 
 
