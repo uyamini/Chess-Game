@@ -67,6 +67,7 @@ squares.forEach(square => {
     square.addEventListener('drop', dragDrop);
 })
 
+//drag and drop functions
 let startPositionId;
 let draggedElement;
 
@@ -119,6 +120,7 @@ function dragDrop(e) {
         }
     }
 }
+//end of drag and drop functions
 
 /*----- functions -----*/
 
@@ -128,6 +130,7 @@ function isValid(target)
     return true;
 }
 
+//Check for winner and helper functions
 function checkForVictory() {
     const kings = Array.from(document.querySelectorAll('#king'));
     const whiteKingExists = kings.some(king => king.firstChild.classList.contains('white'));
@@ -155,3 +158,6 @@ function disableDraggable() {
         }
     });
 }
+
+//end of check for winner and helper functions
+
