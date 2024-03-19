@@ -76,6 +76,47 @@ function dragStart(e) {
 }
 
 
+function dragDrop(e) {
+    //we drop into empty squares most of the time; 
+    //but when not empty, we need to make sure we are dropping into the square itself and not on an svg 
+    e.stopPropagation(); //didn't work without this
+    console.log('playerGo',playerGo);
+    console.log('e.target', e.target);
+    //if we are dragging a piece, we want to make sure that the dragged element is of the right colour (playerGo's color)
+    const isCorrectPlayer = draggedElement.firstChild.classList.contains(playerGo);
+    const taken = e.target.classList.contains('piece');
+    const opponent = playerGo === 'white' ? 'black' : 'white'
+    //check if the target contains an opponent piece
+    const takenByOpponent = e.target.firstChild?.classList.contains(opponent);
+
+    if(isCorrectPlayer) {
+        //if it is taken by the opponent and the move is valid
+        if(takenByOpponent && isValid(e.target)) {
+            e.target.parentNode.append(draggedElement);
+            e.target.remove();
+            checkForVictory();
+            changePlayer();
+            return;
+        }
+
+        //invalid move
+        if(taken && !takenByOpponent)
+        {
+            infoDisplay.textContent = "Invalid move!"
+            setTimeout(() => infoDisplay.textContent = "", 3000);
+            return;
+        }
+        //assuming nothing is in the square
+        if(isValid(e.target)) {
+            e.target.append(draggedElement);
+            checkForVictory();
+            changePlayer();
+            return;
+        }
+    }
+    //e.target.append(draggedElement);
+
+}
 
 /*----- functions -----*/
 
