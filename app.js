@@ -56,13 +56,16 @@ function getSquareColor(index) {
     return (row % 2 === 0) ? ((index % 2 === 0) ? "beige" : "brown") : ((index % 2 === 0) ? "brown" : "beige");
 }
 
-
 createBoard();
 /*----- cached elements  -----*/
-
+const squares = document.querySelectorAll(".square");
 
 /*----- event listeners -----*/
-
+squares.forEach(square => {
+    square.addEventListener('dragstart', dragStart);
+    square.addEventListener('dragover', dragOver);
+    square.addEventListener('drop', dragDrop);
+})
 
 /*----- functions -----*/
 
