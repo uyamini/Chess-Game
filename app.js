@@ -19,23 +19,12 @@ const startPieces = [
 let playerGo = 'black';
 playerDisplay.textContent = 'black';
 
-/*----- cached elements  -----*/
-
-
-/*----- event listeners -----*/
-
-
-/*----- functions -----*/
-
 function createBoard() {
     startPieces.forEach((startPiece, i) => {
         const square = document.createElement('div');
         square.classList.add('square');
         square.innerHTML = startPiece;
-        //make it drag and drop
-        if(square.firstChild)
-            square.firstChild.setAttribute('draggable',true);
-
+        
         square.setAttribute('square-id', i);
         //square.classList.add('beige');
         //setting the colors of the board
@@ -67,3 +56,12 @@ function createBoard() {
 }
 
 createBoard();
+/*----- cached elements  -----*/
+
+
+/*----- event listeners -----*/
+
+
+/*----- functions -----*/
+
+
