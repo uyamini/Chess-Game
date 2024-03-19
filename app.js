@@ -127,3 +127,31 @@ function isValid(target)
 {  
     return true;
 }
+
+function checkForVictory() {
+    const kings = Array.from(document.querySelectorAll('#king'));
+    const whiteKingExists = kings.some(king => king.firstChild.classList.contains('white'));
+    const blackKingExists = kings.some(king => king.firstChild.classList.contains('black'));
+
+    if (!whiteKingExists) {
+        declareWinner("Black");
+    }
+
+    if (!blackKingExists) {
+        declareWinner("White");
+    }
+}
+
+function declareWinner(winner) {
+    infoDisplay.innerHTML = `${winner} Player Wins!`;
+    disableDraggable();
+}
+
+function disableDraggable() {
+    const allSquares = document.querySelectorAll('.square');
+    allSquares.forEach(square => {
+        if (square.firstChild) {
+            square.firstChild.setAttribute('draggable', false);
+        }
+    });
+}
