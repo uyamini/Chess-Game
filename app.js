@@ -1,14 +1,8 @@
 /*----- constants -----*/
-const gameBoard = document.querySelector("#gameboard");
+const chessBoard = document.querySelector("#chessboard");
 const playerDisplay = document.querySelector("#player");
 const infoDisplay = document.querySelector("#info-display");
 const width = 8;
-
-/*----- state variables -----*/
-//start state
-let playerGo = 'black';
-playerDisplay.textContent = 'black';
-
 const startPieces = [
     rook, knight, bishop, queen, king, bishop, knight, rook,
     pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
@@ -19,6 +13,11 @@ const startPieces = [
     pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
     rook, knight, bishop, queen, king, bishop, knight, rook,
 ]
+
+/*----- state variables -----*/
+//start state
+let playerGo = 'black';
+playerDisplay.textContent = 'black';
 
 /*----- cached elements  -----*/
 
@@ -36,7 +35,7 @@ function createBoard() {
         //make it drag and drop
         if(square.firstChild)
             square.firstChild.setAttribute('draggable',true);
-        
+
         square.setAttribute('square-id', i);
         //square.classList.add('beige');
         //setting the colors of the board
@@ -62,7 +61,7 @@ function createBoard() {
             square.firstChild.firstChild.classList.add('white');
         }
 
-        gameBoard.append(square);
+        chessBoard.append(square);
     })
 
 }

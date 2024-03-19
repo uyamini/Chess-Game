@@ -1,0 +1,32 @@
+#gameboard {
+    width: 480px; /* Adjusted width */
+    height: 480px; /* Adjusted height */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.square {
+    height: 60px; /* Adjusted height */
+    width: 60px; /* Adjusted width */
+    position: relative;
+}
+
+.beige {
+    background-color: rgba(209, 208, 199, 0.904);
+}
+
+.brown {
+    background-color: rgb(203, 47, 39);
+}
+
+.black {
+    fill: rgb(0, 0, 0);
+}
+
+.white {
+    fill: rgb(255, 255, 255);
+}
