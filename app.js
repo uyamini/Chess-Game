@@ -75,6 +75,10 @@ function dragStart(e) {
     draggedElement = e.target
 }
 
+function dragOver(e) {
+    //to prevent the default action from happening, don't need to know what happens
+    e.preventDefault();
+}
 
 function dragDrop(e) {
     //we drop into empty squares most of the time; 
@@ -114,10 +118,12 @@ function dragDrop(e) {
             return;
         }
     }
-    //e.target.append(draggedElement);
-
 }
 
 /*----- functions -----*/
 
 
+function isValid(target)
+{  
+    return true;
+}
