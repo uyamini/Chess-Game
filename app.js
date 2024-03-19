@@ -27,19 +27,11 @@ function createBoard() {
         //make it drag and drop
         if(square.firstChild)
             square.firstChild.setAttribute('draggable',true);
-        
         square.setAttribute('square-id', i);
-        //square.classList.add('beige');
         //setting the colors of the board
-        //finds the row number, i is the column number (got this formula from the internet)
-        const row = Math.floor((63-i)/8) + 1;
-        if(row % 2 === 0)
-        {
-            square.classList.add( i % 2 === 0 ?"beige" : "brown")
-        }
-        else{
-            square.classList.add( i % 2 === 0 ?"brown" : "beige")
-        }
+        //i is the column number
+        let sqcolor = getSquareColor(i);
+        square.classList.add(sqcolor);
 
         //setting the colors of the pieces
         if( i <= 15)
@@ -57,6 +49,13 @@ function createBoard() {
     })
 
 }
+
+//function to get color of the square based on index (column)
+function getSquareColor(index) {
+    const row = Math.floor((63 - index) / 8) + 1;
+    return (row % 2 === 0) ? ((index % 2 === 0) ? "beige" : "brown") : ((index % 2 === 0) ? "brown" : "beige");
+}
+
 
 createBoard();
 /*----- cached elements  -----*/
