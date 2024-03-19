@@ -24,6 +24,17 @@
     z-index: -9;
 }
 
+path {
+    position: relative;
+    z-index: -10;
+}
+
+.piece {
+    position: relative;
+    /*piece will always be first and not the square */
+    z-index: 9;
+}
+
 .beige {
     background-color: rgba(209, 208, 199, 0.904);
 }
