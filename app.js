@@ -4,31 +4,32 @@ const playerDisplay = document.querySelector("#player");
 const infoDisplay = document.querySelector("#info-display");
 const width = 8;
 const startPieces = [
-    rook, knight, bishop, queen, king, bishop, knight, rook,
-    pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
-    '','','','','','','','',
-    '','','','','','','','',
-    '','','','','','','','',
-    '','','','','','','','',
-    pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
-    rook, knight, bishop, queen, king, bishop, knight, rook,
-]
+    { type: 'rook', color: 'black' }, { type: 'knight', color: 'black' }, // etc...
+    { type: 'pawn', color: 'black' }, // etc...
+    // Empty squares represented by null for simplicity
+    null, null, // etc...
+    { type: 'pawn', color: 'white' }, // etc...
+    { type: 'rook', color: 'white' }, { type: 'knight', color: 'white' }, // etc...
+];
 
 /*----- state variables -----*/
 //start state
 let playerGo = 'black';
 playerDisplay.textContent = 'black';
 
-function createBoard() {
+function createBoard() { 
     startPieces.forEach((startPiece, i) => {
         const square = document.createElement('div');
         square.classList.add('square');
-        square.innerHTML = startPiece;
 
-        // Check if king element
-        if (startPiece === 'king') {
-            console.log("Found a king piece at index:", i);
-        }
+        // Check if king element and add ID dynamically
+          if (startPiece === 'king') {
+            const kingColor = (i <= 15) ? 'black' : 'white';
+            square.innerHTML = startPiece;
+            square.firstChild.id = `${kingColor}-king`; // Add king ID based on color
+          } else {
+            square.innerHTML = startPiece;
+          }
         //make it drag and drop
         if(square.firstChild)
             square.firstChild.setAttribute('draggable',true);
@@ -105,7 +106,14 @@ function dragDrop(e) {
             e.target.parentNode.append(draggedElement);
             e.target.remove();
             checkForVictory();
-            checkForCheckmate(e);
+            if (isKingInCheck(playerGo)) {
+                infoDisplay.textContent = 'Check!';
+                if (isCheckmate()) {
+                    infoDisplay.textContent = 'Checkmate!';
+                }
+            }
+
+           // checkForCheckmate(e);
             changePlayer();
             return;
         }
@@ -121,7 +129,13 @@ function dragDrop(e) {
         if(isValid(e.target)) {
             e.target.append(draggedElement);
             checkForVictory();
-            checkForCheckmate(e);
+            if (isKingInCheck(playerGo)) {
+                infoDisplay.textContent = 'Check!';
+                if (isCheckmate()) {
+                    infoDisplay.textContent = 'Checkmate!';
+                }
+            }
+          //  checkForCheckmate(e);
             changePlayer();
             return;
         }
@@ -258,6 +272,95 @@ function checkForCheckmate(e) {
 
 function checkForVictory() {
     // Victory condition logic here
-    console.log("Checking for victory...");
-}
+    const kings = Array.from(document.querySelectorAll('#king'));
+        const whiteKingExists = kings.some(king => king.firstChild.classList.contains('white'));
+        const blackKingExists = kings.some(king => king.firstChild.classList.contains('black'));
+
+        if (!whiteKingExists) {
+            declareWinner("Black");
+        }
+
+        if (!blackKingExists) {
+            declareWinner("White");
+        }
+    }
+
+    function declareWinner(winner) {
+        infoDisplay.innerHTML = `${winner} Player Wins!`;
+        disableDraggable();
+    }
+
+    function disableDraggable() {
+        const allSquares = document.querySelectorAll('.square');
+        allSquares.forEach(square => {
+            if (square.firstChild) {
+                square.firstChild.setAttribute('draggable', false);
+            }
+        });
+    }
+
+    function isKingInCheck(color) {
+        const king = document.getElementById(`${color}-king`);
+      
+        if (king) {
+          const kingSquareId = parseInt(king.parentNode.getAttribute('square-id'));
+      
+          // Iterate over all squares
+          for (const square of squares) {
+            const piece = square.firstChild;
+      
+            // Check if the piece belongs to the opponent and can attack the king
+            if (piece && piece.classList.contains(color === 'white' ? 'black' : 'white')) {
+              const isValidMove = isValid(square);
+              if (isValidMove && square.getAttribute('square-id') == kingSquareId) {
+                return true;
+              }
+            }
+          }
+          return false;
+        } else {
+          console.error("King element not found!");
+        }
+      }      
+    
+    function isCheckmate() {
+        // Check if the current player's king is in check
+        if (!isKingInCheck(playerGo)) {
+            return false; // King is not in check, so it's not checkmate
+        }
+        
+        // Iterate over all squares
+        for (const square of squares) {
+            const piece = square.firstChild;
+            
+            // Check if the piece belongs to the current player
+            if (piece && piece.classList.contains(playerGo)) {
+                const isValidMove = isValid(square);
+                
+                // Check if moving this piece can remove the check
+                if (isValidMove) {
+                    // Simulate the move to see if it removes the check
+                    const currentPiece = square.removeChild(piece);
+                    const originalSquare = square.getAttribute('square-id');
+                    const targetSquare = draggedElement.parentNode.getAttribute('square-id');
+                    square.append(currentPiece);
+                    
+                    if (!isKingInCheck(playerGo)) {
+                        // Move removes the check, so it's not checkmate
+                        square.removeChild(currentPiece);
+                        document.querySelector(`[square-id="${targetSquare}"]`).append(currentPiece);
+                        return false;
+                    }
+                    
+                    // Revert the simulated move
+                    square.removeChild(currentPiece);
+                    document.querySelector(`[square-id="${targetSquare}"]`).append(currentPiece);
+                    document.querySelector(`[square-id="${originalSquare}"]`).append(piece);
+                }
+            }
+        }
+        // If no move can remove the check, it's checkmate
+        return true;
+    }
+    
 
