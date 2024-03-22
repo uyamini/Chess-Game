@@ -24,37 +24,37 @@
             const square = document.createElement('div');
             square.classList.add('square');
             square.innerHTML = startPiece;
-
+    
             // Check if king element
             if (startPiece === 'king') {
-                console.log("Found a king piece at index:", i);
+                // Assign unique ID based on color
+                const color = (i < 16) ? 'black' : 'white'; // Assuming first 16 pieces are black
+                square.firstChild.setAttribute('id', 'king.' + color);
             }
-            //make it drag and drop
-            if(square.firstChild)
-                square.firstChild.setAttribute('draggable',true);
+    
+            // Make it draggable if there's a piece
+            if (square.firstChild)
+                square.firstChild.setAttribute('draggable', true);
+    
             square.setAttribute('square-id', i);
-            //setting the colors of the board
-            //i is the column number
+    
+            // Setting the colors of the board
             let sqcolor = getSquareColor(i);
             square.classList.add(sqcolor);
-
-            //setting the colors of the pieces
-            if( i <= 15)
-            {
+    
+            // Setting the colors of the pieces
+            if (i <= 15) {
                 square.firstChild.firstChild.classList.add('black');
             }
-
-            //last 16
-            if( i >= 48 )
-            {
+    
+            if (i >= 48) {
                 square.firstChild.firstChild.classList.add('white');
             }
-
+    
             chessBoard.append(square);
-        })
-
+        });
     }
-
+    
     //function to get color of the square based on index (column)
     function getSquareColor(index) {
         const row = Math.floor((63 - index) / 8) + 1;
@@ -98,7 +98,7 @@
         const opponent = playerGo === 'white' ? 'black' : 'white'
         //check if the target contains an opponent piece
         const takenByOpponent = e.target.firstChild?.classList.contains(opponent);
-
+    
         if(isCorrectPlayer) {
             //if it is taken by the opponent and the move is valid
             if(takenByOpponent && isValid(e.target)) {
@@ -109,7 +109,7 @@
                 changePlayer();
                 return;
             }
-
+    
             //invalid move
             if(taken && !takenByOpponent)
             {
@@ -131,371 +131,338 @@
 
     /*----- functions -----*/
 
-
     function isValid(target)
     {  
         //parent's square-id if there is a pawn in the square
         const targetId = Number(target.getAttribute('square-id')) || Number(target.parentNode.getAttribute('square-id'));
         const startId = Number(startPositionId);
         const piece = draggedElement.id;
-
+    
         switch(piece) {
             //got the math for this from the internet
             case 'pawn' :
                 const starterRow = [8, 9, 10, 11, 12, 13, 14, 15];
-
+    
                 //to check if the move is valid
                 if(
                     starterRow.includes(startId) && startId + width * 2 === targetId ||
                     startId + width === targetId || //row below
-                    startId + width - 1 === targetId && //diagonal
-                    document.querySelector(`[square-id="${startId + width -1}"]`).firstChild ||
-                    document.querySelector(`[square-id="${startId + width +1}"]`).firstChild
-                    ) {
+                    startId - width * 2 === targetId && startId >= 48 || //two rows above if we're in the starting row of the pawn
+                startId - width === targetId || //row above
+                startId - width + 1 === targetId && target.classList.contains('piece') || //caputuring to the right
+                startId - width - 1 === targetId && target.classList.contains('piece')  //capturing to the left
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+            break;
 
+        case 'rook':
+            const startRow = Math.floor((63 - startId) / 8) + 1;
+            const targetRow = Math.floor((63 - targetId) / 8) + 1;
+            const startCol = startId % 8;
+            const targetCol = targetId % 8;
+
+            //if moving to the same row or column
+            if (startRow === targetRow || startCol === targetCol) {
+                //if there is something in the way
+                if (startRow === targetRow) {
+                    //moving left
+                    if (targetId < startId) {
+                        for (let i = startId - 1; i > targetId; i--) {
+                            if (squares[i].classList.contains('piece')) {
+                                return false;
+                            }
+                        }
+                    }
+                    //moving right
+                    if (targetId > startId) {
+                        for (let i = startId + 1; i < targetId; i++) {
+                            if (squares[i].classList.contains('piece')) {
+                                return false;
+                            }
+                        }
+                    }
+                } else {
+                    //moving up
+                    if (targetId < startId) {
+                        for (let i = startId - width; i > targetId; i -= width) {
+                            if (squares[i].classList.contains('piece')) {
+                                return false;
+                            }
+                        }
+                    }
+                    //moving down
+                    if (targetId > startId) {
+                        for (let i = startId + width; i < targetId; i += width) {
+                            if (squares[i].classList.contains('piece')) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+            return false;
+
+        case 'knight':
+            //getting the squares in which the knight can move to
+            const validMoves = getKnightMoves(startId);
+            return validMoves.includes(targetId);
+
+        case 'bishop':
+            const startColor = getSquareColor(startId);
+            const targetColor = getSquareColor(targetId);
+            //if moving diagonally, the colors of the start and end need to be the same
+            if(startColor === targetColor) {
+                const difference = Math.abs(startId - targetId);
+                //if moving diagonally, the difference in column and row numbers will be the same
+                if (difference % 7 === 0 || difference % 9 === 0) {
+                    //if moving up to the right or down to the left
+                    if (startId > targetId) {
+                        for (let i = startId - width - 1; i > targetId; i -= width + 1) {
+                            if (squares[i].classList.contains('piece')) {
+                                return false;
+                            }
+                        }
+                    }
+                    //if moving up to the left or down to the right
+                    if (startId < targetId) {
+                        for (let i = startId + width + 1; i < targetId; i += width + 1) {
+                            if (squares[i].classList.contains('piece')) {
+                                return false;
+                            }
+                        }
+                    }
                     return true;
                 }
-                break;
+            }
+            return false;
+
+        case 'queen':
+            //queens can move like both bishops and rooks
+            return isValid(document.querySelector(`.square[square-id='${targetId}']`));
             
-            case 'knight' :
-                if (
-                    //valid moves for knight
-                    startId + width * 2 - 1 === targetId ||
-                    startId + width * 2 + 1 === targetId ||
-                    startId + width - 2 === targetId ||
-                    startId + width + 2 === targetId ||
-                    startId - width * 2 - 1 === targetId ||
-                    startId - width * 2 + 1 === targetId ||
-                    startId - width - 2 === targetId ||
-                    startId - width + 2 === targetId 
-                ) {
-                    return true;
-                }
-                break;
-
-                case 'bishop':
-                const directions = [-1, 1];
-                const validMoves = [];
-
-                for (let xAxis of directions) {
-                    for (let yAxis of directions) {
-                        for (let i = 1; i <= 7; i++) {
-                            const target = startId + (xAxis * width + yAxis) * i;
-                            const targetSquare = document.querySelector(`[square-id="${target}"]`);
-                            const interveningSquare = document.querySelector(`[square-id="${startId + (xAxis * width + yAxis) * (i - 1)}"]`);
-
-                            if (target === targetId && (!targetSquare.firstChild || i === 1)) {
-                                validMoves.push(true);
-                                break;
-                            } else if (target !== targetId && targetSquare && interveningSquare && interveningSquare.firstChild) {
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (validMoves.includes(true)) {
-                    return true;
-                }
-                break;
-
-
-                case 'rook':
-                    const rHorizontalDirections = [-1, 1];
-                    const rVerticalDirections = [-width, width];
-                    const rValidMoves = [];
-                
-                    //Horizontal movement
-                    for (let hDirection of rHorizontalDirections) {
-                        for (let i = 1; i <= 7; i++) {
-                            const target = startId + hDirection * i;
-                            const targetSquare = document.querySelector(`[square-id="${target}"]`);
-                            const interveningSquares = [];
-                
-                            for (let j = 1; j < i; j++) {
-                                interveningSquares.push(document.querySelector(`[square-id="${startId + hDirection * j}"]`));
-                            }
-                
-                            if (target === targetId && (!targetSquare.firstChild || i === 1)) {
-                                if (interveningSquares.every(square => !square.firstChild)) {
-                                    rValidMoves.push(true);
-                                }
-                                break;
-                            } else if (target !== targetId && targetSquare && interveningSquares.some(square => square && square.firstChild)) {
-                                break;
-                            }
-                        }
-                    }
-                
-                    //Vertical movement
-                    for (let vDirection of rVerticalDirections) {
-                        for (let i = 1; i <= 7; i++) {
-                            const target = startId + vDirection * i;
-                            const targetSquare = document.querySelector(`[square-id="${target}"]`);
-                            const interveningSquares = [];
-                
-                            for (let j = 1; j < i; j++) {
-                                interveningSquares.push(document.querySelector(`[square-id="${startId + vDirection * j}"]`));
-                            }
-                
-                            if (target === targetId && (!targetSquare.firstChild || i === 1)) {
-                                if (interveningSquares.every(square => !square.firstChild)) {
-                                    rValidMoves.push(true);
-                                }
-                                break;
-                            } else if (target !== targetId && targetSquare && interveningSquares.some(square => square && square.firstChild)) {
-                                break;
-                            }
-                        }
-                    }
-                
-                    if (rValidMoves.includes(true)) {
-                        return true;
-                    }
-                    break;
-
-                    
-                    case 'queen':
-        // Combining the logic for rook and bishop
-        // Rook logic
-        const rookValidMoves = [];
-        const rookDirections = [-1, 1, -width, width];
-        for (let direction of rookDirections) {
-            for (let i = 1; i <= 7; i++) {
-                const target = startId + direction * i;
-                const targetSquare = document.querySelector(`[square-id="${target}"]`);
-                const interveningSquares = [];
-                for (let j = 1; j < i; j++) {
-                    interveningSquares.push(document.querySelector(`[square-id="${startId + direction * j}"]`));
-                }
-                if (target === targetId && (!targetSquare.firstChild || i === 1)) {
-                    if (interveningSquares.every(square => !square.firstChild)) {
-                        rookValidMoves.push(true);
-                    }
-                    break;
-                } else if (target !== targetId && targetSquare && interveningSquares.some(square => square && square.firstChild)) {
-                    break;
-                }
-            }
-        }
-
-        //Bishop logic
-        const bishopValidMoves = [];
-        const bishopDirections = [-width - 1, -width + 1, width - 1, width + 1];
-        for (let direction of bishopDirections) {
-            for (let i = 1; i <= 7; i++) {
-                const target = startId + direction * i;
-                const targetSquare = document.querySelector(`[square-id="${target}"]`);
-                const interveningSquares = [];
-                for (let j = 1; j < i; j++) {
-                    interveningSquares.push(document.querySelector(`[square-id="${startId + direction * j}"]`));
-                }
-                if (target === targetId && (!targetSquare.firstChild || i === 1)) {
-                        if (interveningSquares.every(square => !square.firstChild)) {
-                        bishopValidMoves.push(true);
-                    }
-                    break;
-                } else if (target !== targetId && targetSquare && interveningSquares.some(square => square && square.firstChild)) {
-                    break;
-                }
-            }
-        }
-
-        //Combining rook and bishop valid moves
-        if (rookValidMoves.includes(true) || bishopValidMoves.includes(true)) {
-            return true;
-        }
-        break;
-
-                case 'king' :
-                    if (
-                        startId + 1 === targetId ||
-                        startId - 1 === targetId ||
-                        startId + width === targetId ||
-                        startId - width === targetId ||
-                        startId + width +1 === targetId ||
-                        startId + width -1 === targetId ||
-                        startId - width +1 === targetId ||
-                        startId - width -1 === targetId 
-                    ) {
-                        return true;
-                    }
-                    break;
-            }
-                
+        case 'king':
+            //kings can move only one square in any direction
+            const validKingMoves = getKingMoves(startId);
+            return validKingMoves.includes(targetId);
     }
+}
 
-    function changePlayer()
-    {
-        if(playerGo == "black") {
-            reverseIds();
-            playerGo = "white";
-            playerDisplay.textContent = 'white';
-        }
-        else {
-            revertIds();
-            playerGo = "black";
-            playerDisplay.textContent = "black";
+function getKnightMoves(startId) {
+    const row = Math.floor((63 - startId) / 8) + 1;
+    const col = startId % 8;
+    const possibleMoves = [];
+    //direction vectors for knight moves
+    const directions = [[1, 2], [-1, 2], [1, -2], [-1, -2], [2, 1], [-2, 1], [2, -1], [-2, -1]];
+
+    for (let dir of directions) {
+        const newRow = row + dir[0];
+        const newCol = col + dir[1];
+        if (newRow >= 1 && newRow <= 8 && newCol >= 0 && newCol <= 7) {
+            possibleMoves.push((63 - (newRow - 1) * 8) - newCol);
         }
     }
+    return possibleMoves;
+}
 
-    //essentially like flipping the chess board
-    function reverseIds() {
-        // const allSquares = document.querySelectorAll(".square");
-        squares.forEach((square, i) => 
-        square.setAttribute('square-id', (width*width -1) - i));
+function getKingMoves(startId) {
+    const row = Math.floor((63 - startId) / 8) + 1;
+    const col = startId % 8;
+    const possibleMoves = [];
+    //direction vectors for king moves
+    const directions = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [-1, 1], [1, -1]];
+
+    for (let dir of directions) {
+        const newRow = row + dir[0];
+        const newCol = col + dir[1];
+        if (newRow >= 1 && newRow <= 8 && newCol >= 0 && newCol <= 7) {
+            possibleMoves.push((63 - (newRow - 1) * 8) - newCol);
+        }
     }
+    return possibleMoves;
+}
+
+function changePlayer() {
+    playerGo = playerGo === 'white' ? 'black' : 'white';
+    playerDisplay.textContent = playerGo;
+}
+
+function checkForVictory() {
+    const whiteKing = document.querySelector('.piece#king.white');
+    const blackKing = document.querySelector('.piece#king.black');
+
+    if (!whiteKing) {
+        infoDisplay.textContent = "Black wins!";
+        removeEventListeners();
+    }
+    if (!blackKing) {
+        infoDisplay.textContent = "White wins!";
+        removeEventListeners();
+    }
+}
+
+
+function removeEventListeners() {
+    squares.forEach(square => {
+        square.removeEventListener('dragstart', dragStart);
+        square.removeEventListener('dragover', dragOver);
+        square.removeEventListener('drop', dragDrop);
+    });
+}
+
+
+
+function getValidMoves(startId) {
+    const piece = document.querySelector(`.square[square-id='${startId}'] .piece`);
+    const square = document.querySelector(`.square[square-id='${startId}']`);
+    const moves = [];
+
+    switch (piece.id) {
+        case 'pawn':
+            // Implement logic for pawn moves
+            const direction = piece.classList.contains('white') ? 1 : -1;
+            const nextSquare = document.querySelector(`.square[square-id='${parseInt(startId) + 8 * direction}']`);
+            const nextNextSquare = document.querySelector(`.square[square-id='${parseInt(startId) + 16 * direction}']`);
+            if (nextSquare && !nextSquare.hasChildNodes()) {
+                moves.push(parseInt(startId) + 8 * direction);
+                if ((startId[1] === '2' && direction === 1) || (startId[1] === '7' && direction === -1)) {
+                    if (nextNextSquare && !nextNextSquare.hasChildNodes()) {
+                        moves.push(parseInt(startId) + 16 * direction);
+                    }
+                }
+            }
+            // Implement logic for pawn captures
+            const captureSquares = [
+                document.querySelector(`.square[square-id='${parseInt(startId) + 8 * direction + 1}']`),
+                document.querySelector(`.square[square-id='${parseInt(startId) + 8 * direction - 1}']`)
+            ];
+            captureSquares.forEach(square => {
+                if (square && square.hasChildNodes() && square.firstChild.classList.contains(playerGo === 'white' ? 'black' : 'white')) {
+                    moves.push(parseInt(square.getAttribute('square-id')));
+                }
+            });
+            break;
+        case 'rook':
+            // Implement logic for rook moves
+            const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            directions.forEach(direction => {
+                for (let i = 1; i <= 7; i++) {
+                    const nextSquare = document.querySelector(`.square[square-id='${parseInt(startId) + 8 * direction[0] + direction[1]}']`);
+                    if (nextSquare) {
+                        if (!nextSquare.hasChildNodes()) {
+                            moves.push(parseInt(nextSquare.getAttribute('square-id')));
+                        } else {
+                            if (nextSquare.firstChild.classList.contains(playerGo === 'white' ? 'black' : 'white')) {
+                                moves.push(parseInt(nextSquare.getAttribute('square-id')));
+                            }
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            });
+            break;
+        case 'knight':
+            // Implement logic for knight moves
+            const knightMoves = [
+                [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+                [1, -2], [1, 2], [2, -1], [2, 1]
+            ];
+            knightMoves.forEach(move => {
+                const nextSquare = document.querySelector(`.square[square-id='${parseInt(startId) + 8 * move[0] + move[1]}']`);
+                if (nextSquare && (!nextSquare.hasChildNodes() || nextSquare.firstChild.classList.contains(playerGo === 'white' ? 'black' : 'white'))) {
+                    moves.push(parseInt(nextSquare.getAttribute('square-id')));
+                }
+            });
+            break;
+        case 'bishop':
+            // Implement logic for bishop moves
+            const bishopDirections = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+            bishopDirections.forEach(direction => {
+                for (let i = 1; i <= 7; i++) {
+                    const nextSquare = document.querySelector(`.square[square-id='${parseInt(startId) + 8 * direction[0] + direction[1]}']`);
+                    if (nextSquare) {
+                        if (!nextSquare.hasChildNodes()) {
+                            moves.push(parseInt(nextSquare.getAttribute('square-id')));
+                        } else {
+                            if (nextSquare.firstChild.classList.contains(playerGo === 'white' ? 'black' : 'white')) {
+                                moves.push(parseInt(nextSquare.getAttribute('square-id')));
+                            }
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            });
+            break;
+        case 'queen':
+            // Implement logic for queen moves
+            const queenDirections = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+            queenDirections.forEach(direction => {
+                for (let i = 1; i <= 7; i++) {
+                    const nextSquare = document.querySelector(`.square[square-id='${parseInt(startId) + 8 * direction[0] + direction[1]}']`);
+                    if (nextSquare) {
+                        if (!nextSquare.hasChildNodes()) {
+                            moves.push(parseInt(nextSquare.getAttribute('square-id')));
+                        } else {
+                            if (nextSquare.firstChild.classList.contains(playerGo === 'white' ? 'black' : 'white')) {
+                                moves.push(parseInt(nextSquare.getAttribute('square-id')));
+                            }
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            });
+            break;
+        case 'king':
+            // Implement logic for king moves
+            const kingMoves = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+            kingMoves.forEach(move => {
+                const nextSquare = document.querySelector(`.square[square-id='${parseInt(startId) + 8 * move[0] + move[1]}']`);
+                if (nextSquare && (!nextSquare.hasChildNodes() || nextSquare.firstChild.classList.contains(playerGo === 'white' ? 'black' : 'white'))) {
+                    moves.push(parseInt(nextSquare.getAttribute('square-id')));
+                }
+            });
+            break;
+        default:
+            return [];
+    }
+
+    return moves;
+}
+
+function checkForCheckmate() {
+    // Identify the current player's color
+    var currentPlayerColor = (playerGo === "black") ? "black" : "white";
     
-    function revertIds() {
-    //   const allSquares = document.querySelectorAll(".square");
-        squares.forEach((square, i) => 
-        square.setAttribute('square-id', i));
+    // Find the current player's king element
+    var kingElement = document.getElementById("king." + currentPlayerColor);
+
+    // Check if the king element exists
+    if (!kingElement) {
+        console.error("Current player's king not found!");
+        return;
     }
 
-    //Check for winner and helper functions
-    function checkForVictory() {
-        const kings = Array.from(document.querySelectorAll('#king'));
-        const whiteKingExists = kings.some(king => king.firstChild.classList.contains('white'));
-        const blackKingExists = kings.some(king => king.firstChild.classList.contains('black'));
+    // Check for checkmate logic here...
+    // You can use the kingElement to determine the king's position on the board
+    // and then check if it is under attack or if it has any legal moves
+    
+    // Example: Checking if the king is in check
+    var isKingInCheck = isSquareUnderAttack(kingElement);
 
-        if (!whiteKingExists) {
-            declareWinner("Black");
-        }
-
-        if (!blackKingExists) {
-            declareWinner("White");
-        }
+    if (isKingInCheck) {
+        console.log("King is in check!");
+        // Additional logic for handling checkmate...
+    } else {
+        console.log("King is not in check.");
+        // Additional logic if king is not in check...
     }
-
-    function declareWinner(winner) {
-        infoDisplay.innerHTML = `${winner} Player Wins!`;
-        disableDraggable();
-    }
-
-    function disableDraggable() {
-        const allSquares = document.querySelectorAll('.square');
-        allSquares.forEach(square => {
-            if (square.firstChild) {
-                square.firstChild.setAttribute('draggable', false);
-            }
-        });
-    }
-
-    //end of check for winner and helper functions
-    // Check for check
-    function checkForCheck() {
-        const kings = Array.from(document.querySelectorAll('#king'));
-        const currentPlayer = playerGo === 'white' ? 'black' : 'white';
-        const opponent = playerGo === 'white' ? 'black' : 'white';
-        const currentPlayerKing = kings.find(king => king.firstChild.classList.contains(currentPlayer));
-        const opponentPieces = Array.from(document.querySelectorAll(`.${opponent}`));
-
-        const isCheck = opponentPieces.some(piece => isValid(piece.parentNode, currentPlayerKing.parentNode));
-
-        if (isCheck) {
-            infoDisplay.textContent = `${currentPlayer} is in check!`;
-        }
-    }
-
-    function checkForCheckmate(e) {
-        opponentKing = document.querySelector(`#${playerGo === 'white' ? 'black' : 'white'}-king`);
-        if (!opponentKing) {
-          return;
-        }
-              const opponentKingSquare = opponentKing.parentNode;
-              const opponentColor = playerGo === 'white' ? 'black' : 'white';
-          
-              if (isInCheck(opponentKingSquare, opponentColor)) {
-                  const legalMoves = generateLegalMovesForOpponent(opponentColor);
-          
-                  const isCheckmate = legalMoves.every(move => {
-                      const targetSquare = move.target;
-                      const capturedPiece = targetSquare.firstChild; // Store captured piece (if any)
-                      const tempKingSquare = opponentKing.parentNode;
-          
-                      move.target.appendChild(opponentKing);  // Simulate move
-                      opponentKingSquare.removeChild(opponentKing);
-          
-                      if (capturedPiece) {
-                          capturedPiece.parentNode.removeChild(capturedPiece); // Remove captured piece
-                      }
-          
-                      const kingInCheck = isInCheck(move.target, opponentColor); // Check for check after move
-          
-                      tempKingSquare.appendChild(opponentKing);   // Revert move
-                      opponentKingSquare.removeChild(opponentKing);
-                      if (capturedPiece) {
-                          move.target.appendChild(capturedPiece);
-                      }
-          
-                      return kingInCheck;
-                  });
-          
-                  if (isCheckmate) {
-                      infoDisplay.innerHTML = `Checkmate! ${playerGo} Player Wins!`;
-                      disableDraggable();
-                  }
-              }
-          }
-          
-          function isInCheck(kingSquare, kingColor) {
-              const opponentColor = kingColor === 'white' ? 'black' : 'white';
-              const opponentPieces = Array.from(document.querySelectorAll(`.${opponentColor}`));
-          
-              for (const piece of opponentPieces) {
-                  if (isValid(piece.parentNode) && piece.parentNode !== kingSquare) {
-                      const validMove = isValid(piece.parentNode);
-                      if (validMove) {
-                          return true;
-                      }
-                  }
-              }
-          
-              return false;
-          }
-          
-          function generateLegalMovesForOpponent(opponentColor) {
-              const opponentPieces = Array.from(document.querySelectorAll(`.${opponentColor}`));
-              const legalMoves = [];
-            
-              opponentPieces.forEach(piece => {
-                const pieceSquare = piece.parentNode;
-                const pieceId = piece.id;
-            
-                for (const square of squares) {
-                  if (isValid(square) && pieceSquare !== square) {
-                    const targetSquare = square;
-                    const capturedPiece = targetSquare.firstChild; // Store captured piece (if any)
-            
-                    // Simulate move (without actually removing the king)
-                    const tempKingSquare = opponentKing.parentNode;
-                    move.target.appendChild(opponentKing);  // (Simulate move - not needed here)
-                    opponentKingSquare.removeChild(opponentKing);
-            
-                    if (capturedPiece) {
-                      // Check if captured piece is the opponent's king
-                      if (capturedPiece.id === `${opponentColor}-king`) {
-                        continue; // Skip this move as it captures the king
-                      }
-                      capturedPiece.parentNode.removeChild(capturedPiece); // Remove captured piece
-                    }
-            
-                    const validMove = isValid(targetSquare); // Recalculate validity considering captured piece
-            
-                    // Revert simulated move (not needed here)
-                    tempKingSquare.appendChild(opponentKing);
-                    opponentKingSquare.removeChild(opponentKing);
-                    if (capturedPiece) {
-                      move.target.appendChild(capturedPiece);
-                    }
-            
-                    if (validMove) {
-                      legalMoves.push({ piece: piece, target: square });
-                    }
-                  }
-                }
-              });
-            
-              return legalMoves;
-            }
-      
+}
